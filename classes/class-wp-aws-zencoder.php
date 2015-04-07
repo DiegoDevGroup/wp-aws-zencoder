@@ -160,6 +160,9 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 					$pathinfo = pathinfo( $input );
 					$key = trailingslashit( dirname( $input ) );
 
+					//Easiest way to force a new bucket, this does tie this fork to MAJ though
+					$key = preg_replace('#myartsjournal#', 'myartsjournal-encoded', $key);
+
 					// New Encoding Job
 					$job = $this->zen->jobs->create( array(
 						"input" => $input,
@@ -409,6 +412,9 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 			// Clean up after ourselves
 			delete_site_option('waz_job_' . $notification->job->id . '_blog_id');
 
+			// Delete the original file (before encoding)
+			$this->delete_attachment($post_id);
+			
 			foreach( $ids as $key => $id ){
 				echo ucfirst($key) . ': ' . $id . "\n";
 			}
@@ -445,7 +451,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 			$return['site'] = get_site_option( 'waz_job_' . $job_id . '_blog_id' );
 		}
 		$site_id = ( !empty( $return['site'] ) && 1 != $return['site'] ) ? $return['site'] . '_' : '';
-		$postmeta = $wpdb->prefix . $site_id . 'postmeta';
+		$postmeta = $wpdb->prefix . 'postmeta';
 		$results = $wpdb->get_results( "select post_id from $postmeta where meta_value = $job_id" );
 		if( !empty( $results ) ){
 			$return ['post'] = (int)$results[0]->post_id;
