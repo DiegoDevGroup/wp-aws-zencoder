@@ -451,7 +451,13 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 			$return['site'] = get_site_option( 'waz_job_' . $job_id . '_blog_id' );
 		}
 		$site_id = ( !empty( $return['site'] ) && 1 != $return['site'] ) ? $return['site'] . '_' : '';
+		//Sometimes the prefix contains the proper site id, other times it does not.  
+		//Do a quick check to get the proper table name
 		$postmeta = $wpdb->prefix . 'postmeta';
+		if ($postmeta == 'wp_postmeta')
+		{
+			$postmeta = $wpdb->prefix . $site_id . 'postmeta';
+		}
 		$results = $wpdb->get_results( "select post_id from $postmeta where meta_value = $job_id" );
 		if( !empty( $results ) ){
 			$return ['post'] = (int)$results[0]->post_id;
