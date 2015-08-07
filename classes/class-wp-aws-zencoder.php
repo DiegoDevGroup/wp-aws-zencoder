@@ -149,52 +149,62 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 	 */
 
 	function wp_update_attachment_metadata( $data, $post_id ) {
-		if ( $this->is_video( $post_id ) ) {
-			$s3info = get_post_meta( $post_id, 'amazonS3_info', true );
-			$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
-			if( empty( $encoding_status ) && ! empty( $s3info ) ) {
-				update_post_meta( $post_id, 'waz_encode_status', 'pending' );
-				$encoding_job = null;
-				try {
-					$input = "s3://{$s3info['bucket']}/{$s3info['key']}";
-					$pathinfo = pathinfo( $input );
-					$key = trailingslashit( dirname( $input ) );
 
-					//Easiest way to force a new bucket, this does tie this fork to MAJ though
-					$key = preg_replace('#myartsjournal#', 'myartsjournal-encoded', $key);
+		if ( ! $this->is_video( $post_id ) ) {
+			return $data;
+		}
 
-					// New Encoding Job
-					$job = $this->zen->jobs->create( array(
-						"input" => $input,
-						"outputs" => array(
-							array(
-								'label' => 'web',
-								'url' => $key . $pathinfo['filename'] . '.mp4',
-								'public' => true,
-								'device_profile' => 'mobile/advanced',
-								'notifications' => array(
-									array(
-										"url" => apply_filters( 'waz_notification_url', get_home_url( get_current_blog_id(), '/waz_zencoder_notification/' ) )
-									)
+		$video       = get_post( $post_id );
+		$post_status = get_post_status( $video->post_parent );
+
+		if ( $post_status != 'publish' ) {
+			return $data;
+		}
+
+		$s3info = get_post_meta( $post_id, 'amazonS3_info', true );
+		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
+		if( empty( $encoding_status ) && ! empty( $s3info ) ) {
+			update_post_meta( $post_id, 'waz_encode_status', 'pending' );
+			$encoding_job = null;
+			try {
+				$input = "s3://{$s3info['bucket']}/{$s3info['key']}";
+				$pathinfo = pathinfo( $input );
+				$key = trailingslashit( dirname( $input ) );
+
+				//Easiest way to force a new bucket, this does tie this fork to MAJ though
+				$key = preg_replace('#myartsjournal#', 'myartsjournal-encoded', $key);
+
+				// New Encoding Job
+				$job = $this->zen->jobs->create( array(
+					"input" => $input,
+					"outputs" => array(
+						array(
+							'label' => 'web',
+							'url' => $key . $pathinfo['filename'] . '.mp4',
+							'public' => true,
+							'device_profile' => 'mobile/advanced',
+							'notifications' => array(
+								array(
+									"url" => apply_filters( 'waz_notification_url', get_home_url( get_current_blog_id(), '/waz_zencoder_notification/' ) )
 								)
 							)
 						)
-					));
-					update_post_meta( $post_id, 'waz_encode_status', 'submitting' );
-					update_post_meta( $post_id, 'waz_encode_status', 'transcoding' );
-					update_post_meta( $post_id, 'waz_job_id', $job->id );
-					update_post_meta( $post_id, 'waz_outputs', (array)$job->outputs );
-					if( is_multisite() ){
-						update_site_option( 'waz_job_' . $job->id . '_blog_id', get_current_blog_id() );
-					}
-				} catch (Services_Zencoder_Exception $e) {
-					error_log_array( $e->getMessage() );
-					error_log_array( $e->getErrors() );
-					update_post_meta( $post_id, 'waz_encode_status', 'failed' );
-					update_post_meta( $post_id, 'waz_encode_error', $e->getErrors() );
+					)
+				));
+				update_post_meta( $post_id, 'waz_encode_status', 'submitting' );
+				update_post_meta( $post_id, 'waz_encode_status', 'transcoding' );
+				update_post_meta( $post_id, 'waz_job_id', $job->id );
+				update_post_meta( $post_id, 'waz_outputs', (array)$job->outputs );
+				if( is_multisite() ){
+					update_site_option( 'waz_job_' . $job->id . '_blog_id', get_current_blog_id() );
 				}
-			} // !empty
-		} // !in_array
+			} catch (Services_Zencoder_Exception $e) {
+				error_log_array( $e->getMessage() );
+				error_log_array( $e->getErrors() );
+				update_post_meta( $post_id, 'waz_encode_status', 'failed' );
+				update_post_meta( $post_id, 'waz_encode_error', $e->getErrors() );
+			}
+		} // !empty
 
 		return $data;
 	}
