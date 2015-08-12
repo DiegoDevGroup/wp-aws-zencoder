@@ -477,12 +477,13 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 						'device_profile' => 'mobile/advanced',
 						'notifications' => array(
 							array(
-								"url" => apply_filters( 'waz_notification_url', get_home_url( get_current_blog_id(), '/waz_zencoder_notification/' ) )
+								"url" => apply_filters( 'waz_notification_url', get_home_url( get_current_blog_id(), '/waz_zencoder_notification/', 'https' ) )
 							)
 						)
 					)
 				)
 			));
+
 			update_post_meta( $post_id, 'waz_encode_status', 'submitting' );
 			update_post_meta( $post_id, 'waz_encode_status', 'transcoding' );
 			update_post_meta( $post_id, 'waz_job_id', $job->id );
