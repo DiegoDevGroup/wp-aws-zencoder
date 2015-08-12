@@ -34,6 +34,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		add_action( 'save_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'edit_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'publish_post', array( $this, 'save_post' ), 1000 );
+		add_action( 'maj_attachment_connected', array( $this, 'save_post' ), 1000 );
 
 		// Let's delete the attachments
 		add_filter( 'delete_attachment', array( $this, 'delete_attachment' ), 20 );
