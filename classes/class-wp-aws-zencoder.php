@@ -151,28 +151,6 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		$this->save_settings();
 	}
 
-	/*
-	 *Logic
-	 */
-
-	function wp_update_attachment_metadata( $data, $post_id ) {
-
-		if ( ! $this->is_video( $post_id ) ) {
-			return $data;
-		}
-
-		$video       = get_post( $post_id );
-		$post_status = get_post_status( $video->post_parent );
-
-		if ( $post_status != 'publish' ) {
-			return $data;
-		}
-
-
-
-		return $data;
-	}
-
 	function is_video( $post_id ){
 		$type = get_post_mime_type( $post_id );
 		return in_array( $type, $this->accepted_mime_types() );
