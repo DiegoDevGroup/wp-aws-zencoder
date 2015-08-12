@@ -31,7 +31,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		add_action( 'aws_admin_menu', array( $this, 'admin_menu' ) );
 
 		// Whenever a post is saved, check if any attached media should be encoded
-		add_action( 'save_post', array( $this, 'save_post' ), 200, 2 );
+		add_action( 'save_post_post', array( $this, 'save_post_post' ), 200 );
 
 		// Let's delete the attachments
 		add_filter( 'delete_attachment', array( $this, 'delete_attachment' ), 20 );
@@ -417,8 +417,8 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		return $return;
 	}
 
-	public function save_post( $post_id, $post ) {
-		if ( wp_is_post_revision( $post_id ) || 'post' != $post->post_type || 'publish' != get_post_status( $post_id ) ) {
+	public function save_post_post( $post_id ) {
+		if ( wp_is_post_revision( $post_id ) || 'publish' != get_post_status( $post_id ) ) {
 			return;
 		}
 
