@@ -418,7 +418,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 	}
 
 	public function save_post( $post_id, $post ) {
-		if ( wp_is_post_revision( $post_id ) || 'post' != $post->post_type ) {
+		if ( wp_is_post_revision( $post_id ) || 'post' != $post->post_type || 'publish' != get_post_status( $post_id ) ) {
 			return;
 		}
 
@@ -433,13 +433,6 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 	}
 
 	public function should_video_be_encoded( $post_id ) {
-		$video       = get_post( $post_id );
-		$post_status = get_post_status( $video->post_parent );
-
-		if ( $post_status != 'publish' ) {
-			return false;
-		}
-
 		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
 
 		if ( empty( $encoding_status ) ) {
