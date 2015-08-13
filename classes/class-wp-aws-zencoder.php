@@ -34,7 +34,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		add_action( 'save_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'edit_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'publish_post', array( $this, 'save_post' ), 1000 );
-		add_action( 'maj_attachment_connected', array( $this, 'save_post' ), 1000 );
+		add_action( 'maj_post_attached_to_media', array( $this, 'save_post' ), 1000 );
 
 		// Let's delete the attachments
 		add_filter( 'delete_attachment', array( $this, 'delete_attachment' ), 20 );
@@ -422,7 +422,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 
 	public function save_post( $post_id ) {
 		$post = get_post( $post_id );
-		if ( wp_is_post_revision( $post_id ) || 'post' != $post->post_type || 'publish' != get_post_status( $post_id ) ) {
+		if ( wp_is_post_revision( $post_id ) || ! $post instanceof WP_Post || 'post' != $post->post_type || 'publish' != get_post_status( $post_id ) ) {
 			return;
 		}
 
