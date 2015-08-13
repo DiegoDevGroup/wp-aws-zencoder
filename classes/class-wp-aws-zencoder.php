@@ -422,15 +422,17 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 
 	public function save_post( $post_id ) {
 		$post = get_post( $post_id );
-		if ( wp_is_post_revision( $post_id ) || ! $post instanceof WP_Post || 'post' != $post->post_type || 'publish' != get_post_status( $post_id ) ) {
+		if ( wp_is_post_revision( $post_id ) || ! $post instanceof WP_Post || 'post' != $post->post_type ) {
 			return;
 		}
 
-		$attached_media = get_attached_media( 'video', $post_id );
-		if ( $attached_media ) {
-			foreach ( $attached_media as $media ) {
-				if ( $this->is_video( $media->ID ) && $this->should_video_be_encoded( $media->ID ) ) {
-					$this->send_video_for_encoding( $media->ID );
+		if ( 'publish' == get_post_status( $post_id ) || 'private' == get_post_status( $post_id ) ) {
+			$attached_media = get_attached_media( 'video', $post_id );
+			if ( $attached_media ) {
+				foreach ( $attached_media as $media ) {
+					if ( $this->is_video( $media->ID ) && $this->should_video_be_encoded( $media->ID ) ) {
+						$this->send_video_for_encoding( $media->ID );
+					}
 				}
 			}
 		}
