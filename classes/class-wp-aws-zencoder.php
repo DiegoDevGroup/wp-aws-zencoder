@@ -346,6 +346,9 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 			// Update the Metadata
 			wp_update_attachment_metadata( $post_id, $meta );
 
+			// Video has been encoded, here's the meta data
+			do_action('waz_video_encoded', $post_id, $meta);
+
 			// Let's update the S3 information
 			$s3info = $_s3info = get_post_meta( $post_id, 'amazonS3_info', true );
 
@@ -367,7 +370,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 			// Clean up after ourselves
 			delete_site_option('waz_job_' . $notification->job->id . '_blog_id');
 
-			// Delete the original file (before encoding)
+			// Delete the original file
 			$this->delete_attachment($post_id);
 			
 			foreach( $ids as $key => $id ){
@@ -438,14 +441,17 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		}
 	}
 
+	/**
+	 * If post meta 'waz_encode_status' has not been created it, it should be encoded
+	 *
+	 * @param int $post_id
+	 *
+	 * @return bool
+	 */
 	public function should_video_be_encoded( $post_id ) {
 		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
 
-		if ( empty( $encoding_status ) ) {
-			return true;
-		}
-
-		return false;
+		return empty( $encoding_status );
 	}
 
 	private function send_video_for_encoding( $post_id ) {
