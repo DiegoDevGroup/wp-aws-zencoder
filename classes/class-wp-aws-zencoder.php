@@ -450,8 +450,45 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 	 */
 	public function should_video_be_encoded( $post_id ) {
 		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
+		$length = $this->get_video_length( $post_id );
+
+		if ( ! $this->has_sufficient_encoding_time( $length ) ) {
+			do_action( 'maj_not_enough_encoding_time' );
+			return false;
+		}
 
 		return empty( $encoding_status );
+	}
+
+	private function has_sufficient_encoding_time( $length ) {
+		restore_current_blog();
+		$monthly = (int) get_option('maj_upload_time_remaining');
+		$purchased = (int) get_option('maj_purchased_time_remaining');
+
+		return $this->compare_time([$monthly, $purchased], $length);
+	}
+
+	private function compare_time($times, $length) {
+		foreach ($times as $time) {
+			$length -= $time;
+		}
+		return $length > 0;
+	}
+
+	private function get_video_length( $post_id ) {
+		$file = $this->get_video_meta( $post_id );
+		return $file['playtime_string'] * 0.001;
+	}
+
+	private function get_video_meta( $post_id ) {
+		require_once( ABSPATH . '/wp-includes/ID3/getid3.lib.php' );
+		require_once( ABSPATH . '/wp-includes/ID3/getid3.php' );
+		require_once( ABSPATH . '/wp-includes/ID3/module.audio-video.quicktime.php' );
+
+		$id3 = new getID3();
+		$filepath = get_attached_file($post_id);
+
+		return $id3->analyze($filepath);
 	}
 
 	private function send_video_for_encoding( $post_id ) {
