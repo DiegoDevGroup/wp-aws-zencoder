@@ -476,19 +476,8 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 	}
 
 	private function get_video_length( $post_id ) {
-		$file = $this->get_video_meta( $post_id );
-		return $file['playtime_string'] * 0.001;
-	}
-
-	private function get_video_meta( $post_id ) {
-		require_once( ABSPATH . '/wp-includes/ID3/getid3.lib.php' );
-		require_once( ABSPATH . '/wp-includes/ID3/getid3.php' );
-		require_once( ABSPATH . '/wp-includes/ID3/module.audio-video.quicktime.php' );
-
-		$id3 = new getID3();
-		$filepath = get_attached_file($post_id);
-
-		return $id3->analyze($filepath);
+		$meta = wp_get_attachment_metadata( $post_id );
+		return $meta['length'];
 	}
 
 	private function send_video_for_encoding( $post_id ) {
