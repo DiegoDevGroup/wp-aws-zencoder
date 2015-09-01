@@ -453,7 +453,8 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		$length = $this->get_video_length( $post_id );
 
 		if ( ! $this->has_sufficient_encoding_time( $length ) ) {
-			do_action( 'maj_not_enough_encoding_time' );
+			$post = get_post( $post_id );
+			do_action( 'maj_not_enough_encoding_time', $post );
 			return false;
 		}
 
