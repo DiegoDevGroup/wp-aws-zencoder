@@ -443,6 +443,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 
 	/**
 	 * If post meta 'waz_encode_status' has not been created it, it should be encoded
+	 * Also check for enough time in the user's site
 	 *
 	 * @param int $post_id
 	 *
@@ -466,14 +467,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		$monthly = (int) get_option('maj_upload_time_remaining');
 		$purchased = (int) get_option('maj_purchased_time_remaining');
 
-		return $this->compare_time([$monthly, $purchased], $length);
-	}
-
-	private function compare_time($times, $length) {
-		foreach ($times as $time) {
-			$length -= $time;
-		}
-		return $length > 0;
+		return ($monthly + $purchased) > $length;
 	}
 
 	private function get_video_length( $post_id ) {
