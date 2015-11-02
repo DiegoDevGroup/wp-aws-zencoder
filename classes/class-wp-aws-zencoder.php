@@ -9,6 +9,9 @@ use Aws\S3\S3Client;
  */
 
 class WP_AWS_Zencoder extends AWS_Plugin_Base {
+
+	use Trait_Check_User_Encoding_Time;
+
 	private $aws, $s3client;
 
 	const SETTINGS_KEY = 'tantan_wordpress_s3';
@@ -460,14 +463,6 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		}
 
 		return empty( $encoding_status );
-	}
-
-	private function has_sufficient_encoding_time( $length ) {
-		restore_current_blog();
-		$monthly = (int) get_option('maj_upload_time_remaining');
-		$purchased = (int) get_option('maj_purchased_time_remaining');
-
-		return ($monthly + $purchased) > $length;
 	}
 
 	private function get_video_length( $post_id ) {
