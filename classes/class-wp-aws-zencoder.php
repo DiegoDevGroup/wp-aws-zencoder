@@ -432,36 +432,39 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 			return;
 		}
 
-		if ( 'publish' == get_post_status( $post_id ) || 'private' == get_post_status( $post_id ) ) {
-			$attached_media = get_attached_media( 'video', $post_id );
-			if ( $attached_media ) {
-				foreach ( $attached_media as $media ) {
-					if ( $this->is_video( $media->ID ) && $this->should_video_be_encoded( $media->ID ) ) {
-						$this->send_video_for_encoding( $media->ID );
-					}
+		$attached_media = get_attached_media( 'video', $post_id );
+		if ( $attached_media ) {
+			foreach ( $attached_media as $media ) {
+				if ( $this->is_video( $media->ID ) && $this->should_video_be_encoded( $media->ID ) ) {
+					$this->send_video_for_encoding( $media->ID );
 				}
 			}
 		}
 	}
 
 	/**
+	 * Check if the post meta has been set to say "encode me"
+	 * Check for enough time in the user's site
 	 * If post meta 'waz_encode_status' has not been created it, it should be encoded
-	 * Also check for enough time in the user's site
 	 *
 	 * @param int $post_id
 	 *
 	 * @return bool
 	 */
 	public function should_video_be_encoded( $post_id ) {
-		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
-		$length = $this->get_video_length( $post_id );
+		$send_for_encoding = get_post_meta( $post_id, 'maj_send_for_encoding', true );
+		if ( ! $send_for_encoding) {
+			return false;
+		}
 
+		$length = $this->get_video_length( $post_id );
 		if ( ! $this->has_sufficient_encoding_time( $length ) ) {
 			$post = get_post( $post_id );
 			do_action( 'maj_not_enough_encoding_time', $post );
 			return false;
 		}
 
+		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
 		return empty( $encoding_status );
 	}
 
