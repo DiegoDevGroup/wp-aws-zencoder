@@ -38,6 +38,7 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		add_action( 'edit_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'publish_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'maj_post_attached_to_media', array( $this, 'save_post' ), 1000 );
+		add_action( 'maj_video_updated', array( $this, 'save_post' ), 1000 );
 
 		// Let's delete the attachments
 		add_filter( 'delete_attachment', array( $this, 'delete_attachment' ), 20 );
@@ -452,8 +453,8 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 	 * @return bool
 	 */
 	public function should_video_be_encoded( $post_id ) {
-		$send_for_encoding = get_post_meta( $post_id, 'maj_send_for_encoding', true );
-		if ( ! $send_for_encoding) {
+		$video_meta = wp_get_attachment_metadata( $post_id );
+		if ( ! $video_meta['maj_send_for_encoding']) {
 			return false;
 		}
 
