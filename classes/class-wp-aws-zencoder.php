@@ -39,6 +39,9 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 		add_action( 'publish_post', array( $this, 'save_post' ), 1000 );
 		add_action( 'maj_post_attached_to_media', array( $this, 'save_post' ), 1000 );
 		add_action( 'maj_video_updated', array( $this, 'save_post' ), 1000 );
+		
+		// When student media uploader videos are uploaded, encode them
+		add_filter('maj_media_import', [$this, 'student_media_uploader_send_for_encoding'], 1000);
 
 		// Let's delete the attachments
 		add_filter( 'delete_attachment', array( $this, 'delete_attachment' ), 20 );
@@ -467,6 +470,21 @@ class WP_AWS_Zencoder extends AWS_Plugin_Base {
 
 		$encoding_status = get_post_meta( $post_id, 'waz_encode_status', true );
 		return empty( $encoding_status );
+	}
+
+	public function student_media_uploader_send_for_encoding($result) {
+		// Function from MAJ plugin, yeahhhhh
+		if ( ! function_exists('maj_url_is_student_media_importer')) {
+			return $result;
+		}
+		if ( ! maj_url_is_student_media_importer()) {
+			return $result;
+		}
+
+		// Send for video encoding, but not attached to any post, so ¯\_(ツ)_/¯
+		$this->send_video_for_encoding($result['attachID']);
+
+		return $result;
 	}
 
 	private function get_video_length( $post_id ) {
